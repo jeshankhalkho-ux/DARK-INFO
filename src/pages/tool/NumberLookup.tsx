@@ -65,7 +65,7 @@ export default function NumberLookup() {
   const [showKey, setShowKey] = useState(false);
   const [keyError, setKeyError] = useState(false);
 
-  const [number, setNumber] = useState("");  // ← removed "+91" here
+  const [number, setNumber] = useState("");  
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<NumberLookupResult | null>(null);
 
@@ -134,3 +134,4 @@ export default function NumberLookup() {
           <Card className="border-blue-500/30 bg-card/60 backdrop-blur shadow-[0_0_60px_-12px_rgba(37,99,235,0.25)] overflow-hidden relative">
             <div className="absolute -top-32 -right-32 w-96 h-96 bg-blue-500/15 rounded-full blur-[100px] pointer-events-none" />
             <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] pointer-events-non
+            
