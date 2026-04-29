@@ -8,7 +8,12 @@ import { delay } from "./utils";
 // own backend at `/api/lookups/*`, which forwards each request server-side
 // with a real browser User-Agent. This eliminates the dependency on flaky
 // public CORS proxies.
-const API_BASE = "/api/lookups";
+// In development Vite proxies /api → localhost:8787 (see vite.config.ts).
+// In production on Vercel, set the VITE_API_BASE environment variable to your
+// Cloudflare Worker URL, e.g. https://dark-info-api.<your-subdomain>.workers.dev/api/lookups
+const API_BASE =
+  (import.meta.env.VITE_API_BASE as string | undefined)?.replace(/\/$/, "") ??
+  "/api/lookups";
 
 // =============================================================================
 // TYPES
@@ -328,9 +333,7 @@ export const mockApi = {
   ): Promise<ImageGenResult> => {
     await delay(150);
     const promptWithStyle = style && style !== "none" ? `${prompt}, ${style}` : prompt;
-    const url = `https://anshapiimgegn.vercel.app/api?imgp=${encodeURIComponent(
-      promptWithStyle,
-    )}&t=${Date.now()}`;
+    const url = `${API_BASE}/image?imgp=${encodeURIComponent(promptWithStyle)}`;
     return { images: [url], prompt: promptWithStyle };
   },
 
