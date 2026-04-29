@@ -1,0 +1,11 @@
+name            = "dark-info-api"
+main            = "worker.js"
+compatibility_date = "2024-11-01"
+
+# Secrets (never put real values here — use `npx wrangler secret put <NAME>`)
+# NUMBER_API_KEY  → npx wrangler secret put NUMBER_API_KEY
+
+# Optional: bind a custom domain after deploying
+# [[routes]]
+# pattern = "api.yourdomain.com/*"
+# zone_name = "yourdomain.com"
