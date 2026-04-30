@@ -333,8 +333,12 @@ export const mockApi = {
   ): Promise<ImageGenResult> => {
     await delay(150);
     const promptWithStyle = style && style !== "none" ? `${prompt}, ${style}` : prompt;
-    const url = `${API_BASE}/image?imgp=${encodeURIComponent(promptWithStyle)}`;
-    return { images: [url], prompt: promptWithStyle };
+    const apiUrl = `${API_BASE}/image?imgp=${encodeURIComponent(promptWithStyle)}`;
+    const res = await fetch(apiUrl);
+    if (!res.ok) throw new Error(`Image generation failed (HTTP ${res.status})`);
+    const blob = await res.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    return { images: [objectUrl], prompt: promptWithStyle };
   },
 
   // ---------- PAN -> GST ----------
