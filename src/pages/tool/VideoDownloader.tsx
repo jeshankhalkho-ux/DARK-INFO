@@ -38,9 +38,17 @@ export default function VideoDownloader() {
       return;
     }
     try {
-      // Open in new tab — browser will save or play depending on headers
-      window.open(downloadUrl, "_blank", "noopener,noreferrer");
-      toast.success("Opening download…");
+      const API_BASE =
+        (import.meta.env.VITE_API_BASE as string | undefined)?.replace(/\/$/, "") ??
+        "/api/lookups";
+      const proxyUrl = `${API_BASE}/video/download?src=${encodeURIComponent(downloadUrl)}`;
+      const a = document.createElement("a");
+      a.href = proxyUrl;
+      a.download = "video.mp4";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      toast.success("Downloading as MP4…");
     } catch {
       toast.error("Could not start download");
     }
