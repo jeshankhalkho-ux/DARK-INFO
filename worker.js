@@ -1,20 +1,6 @@
 // =============================================================================
 // DARK INFO — Cloudflare Worker backend
 // =============================================================================
-// Drop-in replacement for server.mjs, rewritten for the Workers runtime.
-// Deploy with:  npx wrangler deploy
-//
-// Routes
-//   GET /api/healthz
-//   GET /api/lookups/vehicle?rc=...
-//   GET /api/lookups/number?phone=...
-//   GET /api/lookups/pan/:pan
-//   GET /api/lookups/video?url=...
-//
-// Secrets (set via `npx wrangler secret put NUMBER_API_KEY`)
-//   NUMBER_API_KEY  — key for numberimfo.vishalboss.sbs
-// =============================================================================
-
 const BROWSER_UA =
   "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
@@ -42,7 +28,6 @@ async function forward(url) {
 
 export default {
   async fetch(request, env) {
-    // Pre-flight
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: CORS });
     }
@@ -77,11 +62,10 @@ export default {
     if (pathname === "/api/lookups/number") {
       const phone = (searchParams.get("phone") ?? "").trim();
       if (!phone) return json({ error: "Missing 'phone' query parameter" }, 400);
-      // Key comes from a Wrangler secret; falls back to the default for local dev.
       const key = env.NUMBER_API_KEY ?? "vishal_434b2cfd059a";
       try {
         const res = await forward(
-          `https://numberimfo.vishalboss.sbs/api.php?number=${encodeURIComponent(phone)}&key=${key}`
+          `https://numberimfo.vishalboss.sbs/api.php?number=${encodeURIComponent(phone)}&key=${key}&api_key=${key}`
         );
         return json(await res.json());
       } catch (err) {
@@ -90,7 +74,7 @@ export default {
       }
     }
 
-    // ── PAN → GST  (/api/lookups/pan/:pan) ───────────────────────────────────
+    // ── PAN → GST ─────────────────────────────────────────────────────────────
     const panMatch = pathname.match(/^\/api\/lookups\/pan\/([^/]+)$/);
     if (panMatch) {
       const pan = decodeURIComponent(panMatch[1]).toUpperCase();
@@ -117,7 +101,7 @@ export default {
           status: 200,
           headers: {
             ...CORS,
-            "Content-Type": res.headers.get("Content-Type") || "image/jpeg",
+            "Content-Type": res.headers.get("Content-Type") || "image/png",
           },
         });
       } catch (err) {
@@ -126,7 +110,7 @@ export default {
       }
     }
 
-    // ── Video ─────────────────────────────────────────────────────────────────
+    // ── Video metadata ────────────────────────────────────────────────────────
     if (pathname === "/api/lookups/video") {
       const url = (searchParams.get("url") ?? "").trim();
       if (!url) return json({ error: "Missing 'url' query parameter" }, 400);
@@ -138,6 +122,27 @@ export default {
       } catch (err) {
         console.error("[video]", err);
         return json({ error: "Video lookup failed" }, 502);
+      }
+    }
+
+    // ── Video download proxy (forces MP4 save) ────────────────────────────────
+    if (pathname === "/api/lookups/video/download") {
+      const src = (searchParams.get("src") ?? "").trim();
+      if (!src) return json({ error: "Missing 'src' query parameter" }, 400);
+      try {
+        const res = await forward(src);
+        const blob = await res.arrayBuffer();
+        return new Response(blob, {
+          status: 200,
+          headers: {
+            ...CORS,
+            "Content-Type": "video/mp4",
+            "Content-Disposition": 'attachment; filename="video.mp4"',
+          },
+        });
+      } catch (err) {
+        console.error("[video-download]", err);
+        return json({ error: "Video download failed" }, 502);
       }
     }
 
