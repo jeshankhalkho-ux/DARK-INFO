@@ -145,7 +145,7 @@ export const mockApi = {
   // GET https://numberimfo.vishalboss.sbs/api.php?number=...&key=...
   // Response: { status, results: { "Result 1": {...}, ... } }
   lookupNumber: async (phone: string): Promise<NumberLookupResult> => {
-    const res = await fetch(`https://numberimfo.vishalboss.sbs/api.php?number=${encodeURIComponent(phone)}&key=vishal_434b2cfd059a`);
+    const res = await fetch(`/api/number?phone=${encodeURIComponent(phone)}`);
     if (!res.ok) throw new Error(`Lookup failed (HTTP ${res.status})`);
     const json = await res.json();
     if (!json?.status) throw new Error(json?.message || "No data found for this number");
